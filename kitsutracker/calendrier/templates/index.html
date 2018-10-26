@@ -1,0 +1,188 @@
+<head>
+  <title>Kitsu-Planning</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  {% load static %}
+  {% load lookup %}
+  <!-- UIkit CSS -->
+  <link rel="stylesheet" href="{% static './css/uikit.min.css' %}" />
+  <link rel="stylesheet" href="{% static './css/style.css' %}" />
+  <script src="{% static './js/jquery.min.js' %}"></script>
+  <!-- UIkit JS -->
+  <script src="{% static './js/uikit.min.js' %}"></script>
+  <script src="{% static './js/uikit-icons.min.js' %}"></script>
+</head>
+<header class="uk-navbar-container uk-margin" uk-navbar uk-sticky="top: 200; bottom: #animation; animation: uk-animation-slide-top; show-on-up: true">
+  <div id="pc">
+    <div class="uk-navbar-left">
+      <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle="target: #smartphone; animation: uk-animation-fade" disabled></a>
+      <a class="uk-navbar-item uk-logo" href="./">Kitsu-Planning</a>
+    </div>
+    <div class="uk-navbar-right">
+
+      <div class="uk-navbar-item pc">
+        <form action="{% url 'calendrier:calendrier' %}" method="get" class="uk-search uk-search-default">
+          <span uk-search-icon></span>
+            <input name="username" class="uk-search-input" {% if username != "" %} value="{{ username }}" {% endif %} type="search" placeholder="Enter your username to track your planning">
+        </form>
+      </div>
+      <a uk-toggle="target: #settings"><span class="uk-margin-small-right pc" uk-icon="icon: cog; ratio: 2"></span></a>
+      <a href="https://github.com/Gakamine/KitsuTracker"><span class="uk-margin-small-right" uk-icon="icon: github; ratio: 2"></span></a>
+      <a href="https://twitter.com/Gakamine71"><span class="uk-margin-small-right" uk-icon="icon: twitter; ratio: 2"></span></a>
+    </div>
+  </div>
+  <div id="smartphone" class="smartphone" hidden>
+    <div id="scroll-nav" class="nav-smartphone">
+      <span class="uk-icon uk-margin-small-right smartphone" uk-icon="icon: chevron-right; ratio: 2;"></span>
+      <a uk-toggle="target: #settings"><span class="uk-margin-small-right" uk-icon="icon: cog; ratio: 2"></span></a>
+      <ul class="uk-navbar-nav smartphone">
+        <li>
+          <form action="{% url 'calendrier:calendrier' %}" method="get" class="uk-search uk-search-default">
+            <span uk-search-icon></span>
+              <input name="username" {% if username != "" %} value="{{ username }}" {% endif %}  class="uk-search-input" type="search" placeholder="Enter your username to track your planning"></input>
+          </form>
+        </li>
+      </ul>
+      <span class="uk-icon uk-margin-small-left smartphone" uk-icon="icon: chevron-left; ratio: 2;"></span>
+    </div>
+  </div>
+</header>
+{% if error != 0 %}
+<div style="margin: 10px; z-index:1;" uk-alert>
+  <a class="uk-alert-close" uk-close></a>
+  <h3>Unexpected Error</h3>
+  <p>No user found for <b>{{ error }}</b>. Try again with your Kitsu id, slug or username. If it's still not working contact Gakamine.</p>
+</div>
+{% endif %}
+<div id="content">
+  <table class="uk-table uk-table-divider">
+    <thead>
+      <tr>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+        <th>Sunday</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {% for i in pic %}
+            {% if monday_l > i %}
+              <td>{{ monday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if tuesday_l > i %}
+              <td>{{ tuesday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if wednesday_l > i %}
+              <td>{{ wednesday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if thursday_l > i %}
+              <td>{{ thursday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if friday_l > i %}
+              <td>{{ friday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if saturday_l > i %}
+              <td>{{ saturday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for i in pic %}
+            {% if sunday_l > i %}
+              <td>{{ sunday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+        {% endfor %}
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+<div id="settings" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Settings</h2>
+        <form method="POST" action="./" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-stacked-select">First day of the week</label>
+                <div class="uk-form-controls">
+                    <select class="uk-select" id="start_week">
+                        <option>Monday</option>
+                        <option>Sunday</option>
+                    </select>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-stacked-select">Titles</label>
+                <div class="uk-form-controls">
+                    <select class="uk-select" id="start_week">
+                        <option>JP</option>
+                        <option>EN</option>
+                    </select>
+                </div>
+            </div>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            <input class="uk-button uk-button-primary" value="Save" type="submit">
+        </p>
+        </form>
+    </div>
+</div>
+<script>
+window.addEventListener('load', function (){
+    $("tbody").each(function() {
+        var $this = $(this);
+        var newrows = [];
+        $this.find("tr").each(function(){
+            var i = 0;
+            $(this).find("td").each(function(){
+                i++;
+                if(newrows[i] === undefined) { newrows[i] = $("<tr></tr>"); }
+                newrows[i].append($(this));
+            });
+        });
+        $this.find("tr").remove();
+        $.each(newrows, function(){
+            $this.append(this);
+        });
+    });
+
+    return false;
+});
+
+</script>

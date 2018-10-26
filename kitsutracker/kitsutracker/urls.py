@@ -15,11 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from calendrier import views
 
+handler404 = 'calendrier.views.handler404'
+handler500 = 'calendrier.views.handler404'
+
 urlpatterns = [
-    url(r'^$', views.index),
+    url(r'^', include(('calendrier.urls', 'calendrier'), namespace='calendrier')),
     path('admin/', admin.site.urls),
 ]
