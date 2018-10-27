@@ -10,7 +10,6 @@ global error,username
 def handler404(request, *args, **argv):
     return render(request, '404.html')
 
-
 def get_season(now,Y):
     seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
            ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
@@ -42,6 +41,7 @@ def readurl(url):
     return data
 
 def get_planning():
+    global language, except_language
     now=datetime.now()
     year=get_year()
     season=get_season(now,int(year))
@@ -54,16 +54,37 @@ def get_planning():
             if(anime_id['attributes']['status']=="current"):
                 id=anime_id['id']
                 try:
-                    title=anime_id['attributes']['titles']['en_jp']
+                    title=anime_id['attributes']['titles'][language]
                 except Exception:
-                    title=anime_id['attributes']['titles']['en_us']
+                    try:
+                        title=anime_id['attributes']['titles'][except_language]
+                    except Exception:
+                        title=anime_id['attributes']['titles']['en_us']
                 day=datetime.strptime(anime_id['attributes']['startDate'], '%Y-%m-%d').weekday()
                 animes.append([id,title,day])
         url='https://kitsu.io/api/edge/anime?filter[year]='+year+'&filter[season]='+season+'&page[limit]=10&page[offset]='+str(urls)
     return animes
 
 def index(request):
-    global error, username
+    global error, username, language,except_language
+    language="en_jp"
+    except_language="en"
+    if 'title' in request.POST:
+        if request.POST['title']=="JP":
+            language="en_jp"
+            except_language="en"
+        else:
+            language="en"
+            except_language="en_jp"
+    elif 'title' in request.COOKIES:
+        if request.COOKIES['title']=="JP":
+            language="en_jp"
+            except_language="en"
+        else:
+            language="en"
+            except_language="en_jp"
+    start_week="Monday"
+    ads=1
     username=""
     error=0
     monday=[]
@@ -74,9 +95,15 @@ def index(request):
     saturday=[]
     sunday=[]
     days=[monday,tuesday,wednesday,thursday,friday,saturday,sunday]
-    if 'username' in request.GET:
+    if ('ads' in request.POST and request.POST['ads']=="1") or ('ads' in request.COOKIES and request.COOKIES['ads']==1):
+        ads=0
+    if 'username' in request.GET and request.GET['username']!="*":
         animes=search(request.GET.get('username'))
+    elif 'id' in request.COOKIES and ('username' not in request.GET or ('username' in request.GET and request.GET['username']!="*")):
+        animes=search(request.COOKIES.get('id'))
     else:
+        if 'id' in request.COOKIES:
+            username=request.COOKIES['id']
         animes=get_planning()
     for anime in animes:
         if anime[2]==0:
@@ -97,6 +124,10 @@ def index(request):
     for i in days:
         if len(i)>anime_pics:
             anime_pics=len(i)
+    if 'start_week' in request.POST:
+        start_week=request.POST['start_week']
+    elif 'start_week' in request.COOKIES:
+        start_week=request.COOKIES['start_week']
     context = {
         'monday': monday,
         'tuesday': tuesday,
@@ -114,9 +145,19 @@ def index(request):
         'sunday_l': len(sunday),
         'error': error,
         'username': username,
+        'start_week': start_week,
         'pic': range(0,anime_pics),
+        'ads': ads,
      }
-    return render(request, 'index.html', context)
+    response = render(request, 'index.html', context)
+    if 'start_week' in request.POST or 'title' in request.POST:
+        response.set_cookie(key='title', value=request.POST.get('title'))
+        response.set_cookie(key='start_week', value=request.POST.get('start_week'))
+    if 'username' in request.GET and request.GET['username']!="*":
+        response.set_cookie(key='id', value=request.GET.get('username'))
+    if 'ads' in request.POST and request.POST['ads']=="1":
+        response.set_cookie(key='ads', value="1")
+    return response
 
 def Get_user_id(arg):
     ask_id=False
@@ -133,7 +174,7 @@ def Get_user_id(arg):
     return data
 
 def search(query):
-    global error, username
+    global error, username,language, except_language
     user_id=Get_user_id(query)
     username=query
     if user_id!="":
@@ -147,9 +188,12 @@ def search(query):
                 if data['data']['attributes']['status']=='current':
                     id=data['data']['id']
                     try:
-                        title=data['data']['attributes']['titles']['en_jp']
+                        title=data['data']['attributes']['titles'][language]
                     except Exception:
-                        title=data['data']['attributes']['titles']['en_us']
+                        try:
+                            title=data['data']['attributes']['titles'][except_language]
+                        except Exception:
+                            title=data['data']['attributes']['titles']['en_us']
                     day=datetime.strptime(data['data']['attributes']['startDate'], '%Y-%m-%d').weekday()
                     animes.append([id,title,day])
             url="https://kitsu.io/api/edge/library-entries?filter[userId]="+str(user_id)+"&filter[kind]=anime&filter[status]=current,planned&page[limit]=10&page[offset]="+str(urls)

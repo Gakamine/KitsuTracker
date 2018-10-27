@@ -12,14 +12,17 @@
   <script src="{% static './js/uikit.min.js' %}"></script>
   <script src="{% static './js/uikit-icons.min.js' %}"></script>
 </head>
-<header class="uk-navbar-container uk-margin" uk-navbar uk-sticky="top: 200; bottom: #animation; animation: uk-animation-slide-top; show-on-up: true">
+<header class="uk-navbar-container uk-margin-bottom" uk-navbar uk-sticky="top: 200; bottom: #animation; animation: uk-animation-slide-top; show-on-up: true">
   <div id="pc">
     <div class="uk-navbar-left">
       <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle="target: #smartphone; animation: uk-animation-fade" disabled></a>
       <a class="uk-navbar-item uk-logo" href="./">Kitsu-Planning</a>
+      {% if username != "" %}
+        <a class="pc uk-navbar-item no-deco" href="./?username=*">Global planning</a>
+        <a class="pc uk-navbar-item no-deco" href="./?username={{ username }}">My planning</a>
+      {% endif %}
     </div>
     <div class="uk-navbar-right">
-
       <div class="uk-navbar-item pc">
         <form action="{% url 'calendrier:calendrier' %}" method="get" class="uk-search uk-search-default">
           <span uk-search-icon></span>
@@ -34,6 +37,10 @@
   <div id="smartphone" class="smartphone" hidden>
     <div id="scroll-nav" class="nav-smartphone">
       <span class="uk-icon uk-margin-small-right smartphone" uk-icon="icon: chevron-right; ratio: 2;"></span>
+      {% if username != "" %}
+        <a class="no-deco" href="./?username=*">Global planning</a>
+        <a class="no-deco" href="./?username={{ username }}">My planning</a>
+      {% endif %}
       <a uk-toggle="target: #settings"><span class="uk-margin-small-right" uk-icon="icon: cog; ratio: 2"></span></a>
       <ul class="uk-navbar-nav smartphone">
         <li>
@@ -58,22 +65,37 @@
   <table class="uk-table uk-table-divider">
     <thead>
       <tr>
-        <th>Monday</th>
+        {% if start_week == "Monday" %}
+          <th>Monday</th>
+        {% else %}
+          <th>Sunday</th>
+        {% endif %}
         <th>Tuesday</th>
         <th>Wednesday</th>
         <th>Thursday</th>
         <th>Friday</th>
         <th>Saturday</th>
-        <th>Sunday</th>
-      </tr>
+        {% if start_week == "Monday" %}
+          <th>Sunday</th>
+        {% else %}
+          <th>Monday</th>
+        {% endif %}      </tr>
     </thead>
     <tbody>
       <tr>
         {% for i in pic %}
-            {% if monday_l > i %}
-              <td>{{ monday|lookup:i }}</td>
+            {% if start_week == "Monday" %}
+              {% if monday_l > i %}
+                <td>{{ monday|lookup:i }}</td>
+              {% else %}
+                <td></td>
+              {% endif %}
             {% else %}
-              <td></td>
+              {% if sunday_l > i %}
+                <td>{{ sunday|lookup:i }}</td>
+              {% else %}
+                <td></td>
+              {% endif %}
             {% endif %}
         {% endfor %}
       </tr>
@@ -123,11 +145,19 @@
       </tr>
       <tr>
         {% for i in pic %}
+          {% if start_week == "Monday" %}
             {% if sunday_l > i %}
               <td>{{ sunday|lookup:i }}</td>
             {% else %}
               <td></td>
             {% endif %}
+          {% else %}
+            {% if monday_l > i %}
+              <td>{{ monday|lookup:i }}</td>
+            {% else %}
+              <td></td>
+            {% endif %}
+          {% endif %}
         {% endfor %}
       </tr>
 
@@ -138,10 +168,11 @@
     <div class="uk-modal-dialog uk-modal-body">
         <h2 class="uk-modal-title">Settings</h2>
         <form method="POST" action="./" class="uk-form-stacked">
+            {% csrf_token %}
             <div class="uk-margin">
                 <label class="uk-form-label" for="form-stacked-select">First day of the week</label>
                 <div class="uk-form-controls">
-                    <select class="uk-select" id="start_week">
+                    <select name="start_week" class="uk-select" id="start_week">
                         <option>Monday</option>
                         <option>Sunday</option>
                     </select>
@@ -150,19 +181,58 @@
             <div class="uk-margin">
                 <label class="uk-form-label" for="form-stacked-select">Titles</label>
                 <div class="uk-form-controls">
-                    <select class="uk-select" id="start_week">
+                    <select name="title" class="uk-select" id="title">
                         <option>JP</option>
                         <option>EN</option>
                     </select>
-                </div>
+              </div>
             </div>
-        <p class="uk-text-right">
-            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-            <input class="uk-button uk-button-primary" value="Save" type="submit">
-        </p>
+          <p class="uk-text-right">
+              <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+              <input class="uk-button uk-button-primary" value="Save" type="submit">
+          </p>
         </form>
     </div>
 </div>
+<div id="ads_modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Remove ads</h2>
+        <p>I care about you, this is why you can remove ads if it's a real pain for your browsing but please, consider thoses ads as a way to support me. I worked many hours on it. Are you sure you want to remove those ads ?</p>
+        <form action="./" method="POST">
+          {% csrf_token %}
+          <label><input name="ads" type="checkbox" class="uk-checkbox" value="1" required></input>I want to remove the ads.</label>
+          <p class="uk-text-right">
+              <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+              <input class="uk-button uk-button-primary" value="Save" type="submit">
+          </p>
+        </form>
+    </div>
+</div>
+{% if ads == 1 %}
+<div id="ads">
+  <a uk-toggle="target: #ads_modal"><span class="uk-margin-small-right" uk-icon="icon: close; ratio: 2"></span></a>
+</div>
+{% endif %}
+<footer>
+  Powered by ❤, made for you by Gakamine/Antoine Joly.
+</footer>
+<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js"></script>
+<script>
+window.addEventListener("load", function(){
+window.cookieconsent.initialise({
+  "palette": {
+    "popup": {
+      "background": "#252e39"
+    },
+    "button": {
+      "background": "#14a7d0"
+    }
+  },
+  "theme": "edgeless",
+  "position": "bottom-right"
+})});
+</script>
 <script>
 window.addEventListener('load', function (){
     $("tbody").each(function() {
